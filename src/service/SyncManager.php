@@ -125,6 +125,12 @@ class SyncManager
     {
         $client = new Client();
         /** @var UpdateModel $updateModel */
+
+        if (!isset($this->updateModel)) {
+            echo 'Notting to log' . PHP_EOL;
+            return;
+        }
+
         foreach ($this->updateModel as $updateModel) {
             $client->request('POST', 'https://jira.hyperia.sk/rest/api/2/issue/' . $updateModel->getJiraId() . '/worklog', [
                 'auth' => [getenv('JIRA_USER'), getenv('JIRA_PASS')],
@@ -133,7 +139,7 @@ class SyncManager
                 ],
             ]);
         }
-        echo 'Logged "' . gmdate('H:i:s', $updateModel->getDuration()) . '" seconds to ' . $updateModel->getJiraKey();
+        echo 'Logged "' . gmdate('H:i:s', $updateModel->getDuration()) . '" seconds to ' . $updateModel->getJiraKey() . PHP_EOL;
     }
 
     /**
