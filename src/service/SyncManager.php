@@ -74,7 +74,7 @@ class SyncManager
         $response = $client->request('POST', 'https://jira.hyperia.sk/rest/api/2/search', [
             'auth' => [getenv('JIRA_USER'), getenv('JIRA_PASS')],
             RequestOptions::JSON => [
-                'jql' => 'status in (Revised, "For revision") AND created >= -4w'
+                'jql' => 'assignee = juraj.marusiak AND status in (Revised, "For revision") AND created >= -4w'
             ],
         ]);
 
@@ -97,7 +97,7 @@ class SyncManager
     {
         $this->jiraIssuesWithNoWorkLog = array_filter($this->jiraIssues, function($jiraIssue) {
             /** @var JiraIssue $jiraIssue */
-           return $jiraIssue->getTimeSpend() === null;
+           return $jiraIssue->getTimeSpend() === null || $jiraIssue->getTimeSpend() === 0;
         });
         return $this;
     }
