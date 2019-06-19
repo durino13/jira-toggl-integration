@@ -1,0 +1,22 @@
+{
+    "name": "durino13/jira-toggl-worklog",
+    "description": "Find issue in Toggl and log work",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Juraj Marusiak",
+            "email": "juraj.marusiak@gmail.com"
+        }
+    ],
+    "require": {
+        "lesstif/php-jira-rest-client": "^1.39",
+        "morningtrain/toggl-api": "^1.0",
+        "guzzlehttp/guzzle": "^6.3",
+        "vlucas/phpdotenv": "^3.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "durino13\\": "src/"
+        }
+    }
+}
