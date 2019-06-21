@@ -18,34 +18,16 @@ use MorningTrain\TogglApi\TogglApi;
 class SyncManager
 {
 
-    /**
-     * @var MorningTrain\TogglApi\TogglApi
-     */
     protected $togglService;
 
-    /**
-     * @var
-     */
     protected $togglProjects;
 
-    /**
-     * @var
-     */
     protected $jiraIssues;
 
-    /**
-     * @var
-     */
     protected $allTimeEntries;
 
-    /**
-     * @var array
-     */
     protected $jiraIssuesWithNoWorkLog;
 
-    /**
-     * @var
-     */
     protected $updateModel;
 
     public function __construct(TogglApi $togglService)
@@ -71,7 +53,7 @@ class SyncManager
     public function loadAllJiraProjects()
     {
         $client = new Client();
-        $response = $client->request('POST', 'https://jira.hyperia.sk/rest/api/2/search', [
+        $response = $client->request('POST', getenv('JIRA_WORKLOG_URL'), [
             'auth' => [getenv('JIRA_USER'), getenv('JIRA_PASS')],
             RequestOptions::JSON => [
                 'jql' => 'assignee = juraj.marusiak AND status in (Revised, "For revision") AND created >= -4w'
@@ -103,8 +85,7 @@ class SyncManager
     }
 
     public function getWorkLogData()
-    {
-        $data = [];
+    {;
         /** @var JiraIssue $jiraSubtaskWithNoWorkLog */
         foreach ($this->jiraIssuesWithNoWorkLog as $jiraSubtaskWithNoWorkLog) {
             /** @var TimeEntry $timeEntry */
@@ -121,7 +102,7 @@ class SyncManager
         return $this;
     }
 
-    public function sendWorkLogToJira()
+    public function sendWorkLogToJira(): void
     {
         $client = new Client();
         /** @var UpdateModel $updateModel */
