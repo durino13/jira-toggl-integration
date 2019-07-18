@@ -119,8 +119,8 @@ class SyncManager
                     'timeSpentSeconds' => $updateModel->getDuration(),
                 ],
             ]);
+            echo 'Logged "' . gmdate('H:i:s', $updateModel->getDuration()) . '" seconds to ' . $updateModel->getJiraKey() . PHP_EOL;
         }
-        echo 'Logged "' . gmdate('H:i:s', $updateModel->getDuration()) . '" seconds to ' . $updateModel->getJiraKey() . PHP_EOL;
     }
 
     /**
