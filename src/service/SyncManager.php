@@ -14,6 +14,7 @@ use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 use MorningTrain\TogglApi\TogglApi;
+use GuzzleHttp\Exception\GuzzleException;
 
 class SyncManager
 {
@@ -75,7 +76,7 @@ class SyncManager
         }
     }
 
-    public function findJiraSubtasksWithNoWorkLog()
+    public function  findJiraSubtasksWithNoWorkLog()
     {
         $this->jiraIssuesWithNoWorkLog = array_filter($this->jiraIssues, function($jiraIssue) {
             /** @var JiraIssue $jiraIssue */
@@ -91,11 +92,15 @@ class SyncManager
             /** @var TimeEntry $timeEntry */
             foreach ($this->allTimeEntries as $timeEntry) {
                 if ($timeEntry->getToggleProject()->getName() === $jiraSubtaskWithNoWorkLog->getIssueName()) {
-                    $updateModel = new UpdateModel();
-                    $updateModel->setJiraId($jiraSubtaskWithNoWorkLog->getIssueId());
-                    $updateModel->setJiraKey($jiraSubtaskWithNoWorkLog->getIssueName());
-                    $updateModel->setDuration($timeEntry->getDuration());
-                    $this->updateModel[] = $updateModel;
+                    try {
+                        $updateModel = new UpdateModel();
+                        $updateModel->setJiraId($jiraSubtaskWithNoWorkLog->getIssueId());
+                        $updateModel->setJiraKey($jiraSubtaskWithNoWorkLog->getIssueName());
+                        $updateModel->setDuration($timeEntry->getDuration());
+                        $this->updateModel[] = $updateModel;
+                    } catch (Exception $e) {
+                        echo $e->getMessage();
+                    }
                 }
             }
         }
@@ -113,13 +118,17 @@ class SyncManager
         }
 
         foreach ($this->updateModel as $updateModel) {
-            $client->request('POST', 'https://jira.hyperia.sk/rest/api/2/issue/' . $updateModel->getJiraId() . '/worklog', [
-                'auth' => [getenv('JIRA_USER'), getenv('JIRA_PASS')],
-                RequestOptions::JSON => [
-                    'timeSpentSeconds' => $updateModel->getDuration(),
-                ],
-            ]);
-            echo 'Logged "' . gmdate('H:i:s', $updateModel->getDuration()) . '" seconds to ' . $updateModel->getJiraKey() . PHP_EOL;
+            try {
+                $client->request('POST', 'https://jira.hyperia.sk/rest/api/2/issue/' . $updateModel->getJiraId() . '/worklog', [
+                    'auth' => [getenv('JIRA_USER'), getenv('JIRA_PASS')],
+                    RequestOptions::JSON => [
+                        'timeSpentSeconds' => $updateModel->getDuration(),
+                    ],
+                ]);
+                echo 'Logged "' . gmdate('H:i:s', $updateModel->getDuration()) . '" seconds to ' . $updateModel->getJiraKey() . PHP_EOL;
+            } catch (GuzzleException $e) {
+                echo 'Nepodarilo sa zapisat cas pre jiru: ' . $updateModel->getJiraKey();
+            }
         }
     }
 
@@ -150,17 +159,17 @@ class SyncManager
         $stdTimeEntries = $this->togglService->getTimeEntriesInRange($yesterday->format($datetimeFormat), $today->format($datetimeFormat));
 
         foreach ($stdTimeEntries as $stdTimeEntry) {
-
             try {
                 $timeEntry = new TimeEntry();
                 $timeEntry->setId($stdTimeEntry->id);
                 $timeEntry->setPid($stdTimeEntry->pid);
                 $timeEntry->setDuration($stdTimeEntry->duration);
-                $timeEntry->setDescription($stdTimeEntry->description);// Find toggle project
+                $description = $stdTimeEntry->description ?? '';
+                $timeEntry->setDescription($description);// Find toggle project
                 $timeEntry->addToggleProject($this->createToggleProject($timeEntry->getPid()));
                 $this->allTimeEntries[] = $timeEntry;
-            } catch (Exception $e) {
-                // Skip unexisting toggle object
+            } catch (\Throwable $e) {
+                echo $e->getMessage();
             }
         }
     }
