@@ -5,6 +5,7 @@ namespace durino13\service;
 
 
 use DateTime;
+use Throwable;
 use DateTimeZone;
 use durino13\model\jira\JiraIssue;
 use durino13\model\toggl\TimeEntry;
@@ -57,7 +58,7 @@ class SyncManager
         $response = $client->request('POST', getenv('JIRA_WORKLOG_URL'), [
             'auth' => [getenv('JIRA_USER'), getenv('JIRA_PASS')],
             RequestOptions::JSON => [
-                'jql' => 'assignee = juraj.marusiak AND status in (Revised, "For revision") AND created >= -4w'
+                'jql' => 'assignee = juraj.marusiak AND status in ("Test", "Revised", "For revision") AND created >= -4w'
             ],
         ]);
 
@@ -99,7 +100,7 @@ class SyncManager
                         $updateModel->setDuration($timeEntry->getDuration());
                         $this->updateModel[] = $updateModel;
                     } catch (Exception $e) {
-                        echo $e->getMessage();
+                        echo $e->getMessage() . PHP_EOL;
                     }
                 }
             }
@@ -160,16 +161,18 @@ class SyncManager
 
         foreach ($stdTimeEntries as $stdTimeEntry) {
             try {
-                $timeEntry = new TimeEntry();
-                $timeEntry->setId($stdTimeEntry->id);
-                $timeEntry->setPid($stdTimeEntry->pid);
-                $timeEntry->setDuration($stdTimeEntry->duration);
-                $description = $stdTimeEntry->description ?? '';
-                $timeEntry->setDescription($description);// Find toggle project
-                $timeEntry->addToggleProject($this->createToggleProject($timeEntry->getPid()));
-                $this->allTimeEntries[] = $timeEntry;
-            } catch (\Throwable $e) {
-                echo $e->getMessage();
+                if (isset($stdTimeEntry->pid)) {
+                    $timeEntry = new TimeEntry();
+                    $timeEntry->setId($stdTimeEntry->id);
+                    $timeEntry->setPid($stdTimeEntry->pid);
+                    $timeEntry->setDuration($stdTimeEntry->duration);
+                    $description = $stdTimeEntry->description ?? '';
+                    $timeEntry->setDescription($description);// Find toggle project
+                    $timeEntry->addToggleProject($this->createToggleProject($timeEntry->getPid()));
+                    $this->allTimeEntries[] = $timeEntry;
+                }
+            } catch (Throwable $e) {
+                echo $e->getMessage() . PHP_EOL;
             }
         }
     }
