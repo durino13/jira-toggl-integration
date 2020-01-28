@@ -10,12 +10,12 @@ $dotenv->load();
 $togglService = new MorningTrain\TogglApi\TogglApi(getenv('TOGGL_TOKEN'));
 
 // Initialize service
-//try {
+try {
     $syncService = (new SyncManager($togglService))->initialize(getenv('TOGGL_CLIENT_ID'), getenv('DAYS_AGO'));
     $syncService->findJiraSubtasksWithNoWorkLog()
         ->getWorkLogData()
         ->sendWorkLogToJira();
-//} catch (Exception $e) {
-//    echo 'Whaaaaat?: ' . $e->getMessage() . ', file: ' . $e->getFile() . ', line: ' . $e->getLine();
-//}
+} catch (Exception $e) {
+    echo 'Whaaaaat?: ' . $e->getMessage() . ', file: ' . $e->getFile() . ', line: ' . $e->getLine();
+}
 
