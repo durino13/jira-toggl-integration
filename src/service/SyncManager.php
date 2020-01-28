@@ -120,7 +120,7 @@ class SyncManager
 
         foreach ($this->updateModel as $updateModel) {
             try {
-                $client->request('POST', 'https://jira.hyperia.sk/rest/api/2/issue/' . $updateModel->getJiraId() . '/worklog', [
+                $client->request('POST', getenv('JIRA_HOST') . '/rest/api/3/issue/' . $updateModel->getJiraId() . '/worklog', [
                     'auth' => [getenv('JIRA_USER'), getenv('JIRA_PASS')],
                     RequestOptions::JSON => [
                         'timeSpentSeconds' => $updateModel->getDuration(),
